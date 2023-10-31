@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "1063575230281",
+    "project_id": "video-calling-app-bd8da",
+    "storage_bucket": "video-calling-app-bd8da.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1063575230281:android:bba01a5f3c70a33db46c98",
+        "android_client_info": {
+          "package_name": "com.example.learnerscontributer"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1063575230281-r2tpkmsjqn51ctdl8f4j2lh7aojktvjg.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAaHmye9x9f2l1I7TRgHZKoRIIhlA87pWU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1063575230281-r2tpkmsjqn51ctdl8f4j2lh7aojktvjg.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
