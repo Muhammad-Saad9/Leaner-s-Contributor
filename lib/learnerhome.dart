@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:video_player/video_player.dart';
 
-
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
 
@@ -15,6 +14,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   File? _selectedVideoFile;
   late VideoPlayerController _videoController;
+  bool _isUploading = false;
 
   @override
   void initState() {
@@ -26,6 +26,45 @@ class _HomeScreenState extends State<HomeScreen> {
   void dispose() {
     _videoController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickVideoFromGallery() async {
+    final pickedVideoFile =
+        await ImagePicker().pickVideo(source: ImageSource.gallery);
+    if (pickedVideoFile != null) {
+      final videoFile = File(pickedVideoFile.path);
+      final videoController = VideoPlayerController.file(videoFile);
+
+      await videoController.initialize();
+      setState(() {
+        _selectedVideoFile = videoFile;
+        _videoController = videoController;
+      });
+    }
+  }
+
+  Future<void> _uploadVideoToFirebase() async {
+    if (_selectedVideoFile != null) {
+      setState(() {
+        _isUploading = true; // Show the progress indicator
+      });
+
+      final storage = FirebaseStorage.instance;
+      final Reference storageRef = storage
+          .ref()
+          .child('videos/${DateTime.now().millisecondsSinceEpoch}.mp4');
+      final UploadTask uploadTask = storageRef.putFile(_selectedVideoFile!);
+
+      // Use a FutureBuilder to show the progress indicator while uploading
+      await uploadTask.whenComplete(() {});
+
+      setState(() {
+        _isUploading = false; // Hide the progress indicator
+      });
+
+      final String downloadUrl = await storageRef.getDownloadURL();
+      print('Video uploaded to Firebase Storage. Download URL: $downloadUrl');
+    }
   }
 
   @override
@@ -63,18 +102,9 @@ class _HomeScreenState extends State<HomeScreen> {
             Container(
               width: double.infinity,
               height: 200,
-              child: FutureBuilder(
-                future: _videoController.initialize(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.done) {
-                    return AspectRatio(
-                      aspectRatio: _videoController.value.aspectRatio,
-                      child: VideoPlayer(_videoController),
-                    );
-                  } else {
-                    return const Text("Loading video...");
-                  }
-                },
+              child: AspectRatio(
+                aspectRatio: _videoController.value.aspectRatio,
+                child: VideoPlayer(_videoController),
               ),
             ),
           if (_selectedVideoFile == null) const Text("Please select a video."),
@@ -116,34 +146,11 @@ class _HomeScreenState extends State<HomeScreen> {
               backgroundColor: MaterialStateProperty.all(Colors.redAccent),
             ),
             child: const Text("UPLOAD VIDEO"),
-          )
+          ),
+          if (_isUploading)
+            CircularProgressIndicator(), // Show the progress indicator while uploading
         ],
       ),
     );
-  }
-
-  Future _pickVideoFromGallery() async {
-    final pickedVideoFile =
-        await ImagePicker().pickVideo(source: ImageSource.gallery);
-    if (pickedVideoFile != null) {
-      final videoFile = File(pickedVideoFile.path);
-      final videoController = VideoPlayerController.file(videoFile);
-      setState(() {
-        _selectedVideoFile = videoFile;
-        _videoController = videoController;
-      });
-    }
-  }
-
-  Future _uploadVideoToFirebase() async {
-    if (_selectedVideoFile != null) {
-      final storage = FirebaseStorage.instance;
-      final Reference storageRef = storage.ref().child('videos/${DateTime.now().millisecondsSinceEpoch}.mp4');
-      final UploadTask uploadTask = storageRef.putFile(_selectedVideoFile!);
-
-      await uploadTask.whenComplete(() {});
-      final String downloadUrl = await storageRef.getDownloadURL();
-      print('Video uploaded to Firebase Storage. Download URL: $downloadUrl');
-    }
   }
 }
